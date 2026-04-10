@@ -38,7 +38,7 @@
 
     iframe {
         width: 100%;
-        height: 70vh;
+        height: 75vh;
         border: none;
         margin-top: 10px;
         background: white;
@@ -52,28 +52,43 @@
 
 <div class="botoes">
 
-    <button onclick="carregar('L8','BRU')">Barueri</button>
+    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=BRU')">
+        Barueri
+    </button>
 
-    <!-- OSASCO COM DUAS LINHAS -->
-    <button onclick="carregar('L8','OSA')">Osasco L8</button>
-    <button onclick="carregar('L9','OSA')">Osasco L9</button>
+    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=OSA')">
+        Osasco - Linha 8
+    </button>
 
-    <button onclick="carregar('L8','JDI')">Jandira</button>
-    <button onclick="carregar('L8','AJO')">Antônio João</button>
-    <button onclick="carregar('L8','BFU')">Barra Funda</button>
+    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L9&estacao_origem=OSA')">
+        Osasco - Linha 9
+    </button>
+
+    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=JDI')">
+        Jandira
+    </button>
+
+    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=AJO')">
+        Antônio João
+    </button>
+
+    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=BFU')">
+        Barra Funda
+    </button>
 
 </div>
 
 <iframe id="trem"></iframe>
 
 <script>
-function carregar(linha, estacao) {
-    let url = `https://proximotrem.viamobilidade.com.br/?linha=${linha}&estacao_origem=${estacao}`;
+function abrirURL(url) {
     document.getElementById("trem").src = url;
 }
 
-// já abre automaticamente em Barueri
-window.onload = () => carregar('L8','BRU');
+// abre automaticamente Barueri ao entrar
+window.onload = () => {
+    abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=BRU');
+};
 </script>
 
 </body>
