@@ -44,36 +44,39 @@
 <h1>🚆 Próximo Trem</h1>
 <div class="botoes">
 
-    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=BRU', false)">
+    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=BRU', false, this)">
         Barueri
     </button>
-    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=AJO', false)">
+    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=AJO', false, this)">
         Antônio João
     </button>
-    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=IPV', false)">
+    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=IPV', false, this)">
         Itapevi
     </button>
-    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=OSA', true)">
+    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=OSA', true, this)">
         Osasco - Linha 8
     </button>
-    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L9&estacao_origem=OSA', true)">
+    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L9&estacao_origem=OSA', true, this)">
         Osasco - Linha 9
     </button>
-    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=JDI', false)">
+    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=JDI', false, this)">
         Jandira
     </button>
-    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=BFU', false)">
+    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=BFU', false, this)">
         Barra Funda
     </button>
+
 
 </div>
 <iframe id="trem"></iframe>
 <script>
-function abrirURL(url, novaAba) {
+function abrirURL(url, novaAba, btn) {
+    document.querySelectorAll('button').forEach(b => b.style.background = '#2563eb');
     if (novaAba) {
         window.open(url, '_blank');
     } else {
         document.getElementById("trem").src = url;
+        if (btn) btn.style.background = '#16a34a'; // verde = ativo
     }
 }
 window.onload = () => {
