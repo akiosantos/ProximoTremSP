@@ -25,7 +25,8 @@
 
         header {
             padding: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            text-align: center;
         }
 
         h1 { margin: 0 0 15px 0; font-size: 1.5rem; }
@@ -52,7 +53,6 @@
         }
 
         button:hover { transform: translateY(-2px); filter: brightness(1.1); }
-        button:active { transform: translateY(0); }
         button.active { background: var(--success); box-shadow: 0 0 10px rgba(22, 163, 74, 0.4); }
 
         .container-trem {
@@ -66,15 +66,17 @@
             width: 100%;
             height: 100%;
             border: none;
+            background: #fff;
         }
 
-        /* Indicador de carregamento simples */
         .loader {
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             color: #333;
-            z-index: -1;
+            z-index: 1;
+            font-weight: bold;
+            display: none;
         }
     </style>
 </head>
@@ -82,57 +84,112 @@
 
 <header>
     <h1>🚆 Próximo Trem</h1>
-    <div class="botoes" id="lista-estacoes">
-        </div>
+    <div class="botoes" id="lista-estacoes"></div>
 </header>
 
 <div class="container-trem">
-    <div class="loader">Carregando horários...</div>
+    <div id="loading-text" class="loader">Carregando horários...</div>
     <iframe id="trem" title="Painel ViaMobilidade"></iframe>
 </div>
 
 <script>
+    // 1. Definição única das estações
     const estacoes = [
-        { nome: 'Barueri', id: 'BRU', linha: 'L8' },
-        { nome: 'Antônio João', id: 'AJO', linha: 'L8' },
-        { nome: 'Itapevi', id: 'IPV', linha: 'L8' },
-        { nome: 'Osasco L8', id: 'OSA', linha: 'L8', externa: true },
-        { nome: 'Osasco L9', id: 'OSA', linha: 'L9', externa: true },
-        { nome: 'Jandira', id: 'JDI', linha: 'L8' },
-        { nome: 'Barra Funda', id: 'BFU', linha: 'L8' }
+        { nome: 'Barueri', id: 'BRU', linha: 'L8', lat: -23.5107, lon: -46.8761 },
+        { nome: 'Antônio João', id: 'AJO', linha: 'L8', lat: -23.4996, lon: -46.8502 },
+        { nome: 'Itapevi', id: 'IPV', linha: 'L8', lat: -23.5487, lon: -46.9343 },
+        { nome: 'Jandira', id: 'JDI', linha: 'L8', lat: -23.5275, lon: -46.9024 },
+        { nome: 'Barra Funda', id: 'BFU', linha: 'L8', lat: -23.5255, lon: -46.6676 },
+        { nome: 'Osasco L8', id: 'OSA', linha: 'L8', lat: -23.5262, lon: -46.7753, externa: true },
+        { nome: 'Osasco L9', id: 'OSA', linha: 'L9', lat: -23.5262, lon: -46.7753, externa: true }
     ];
 
     const iframe = document.getElementById("trem");
+    const loader = document.getElementById("loading-text");
     const containerBotoes = document.getElementById("lista-estacoes");
 
+    // 2. Funções de Cálculo e Lógica
+    function calcularDistancia(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) ** 2 +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon / 2) ** 2;
+        return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    }
+
+    function encontrarEstacaoMaisProxima(userLat, userLon) {
+        let maisProxima = estacoes[0];
+        let menorDistancia = Infinity;
+        estacoes.forEach(est => {
+            const d = calcularDistancia(userLat, userLon, est.lat, est.lon);
+            if (d < menorDistancia) {
+                menorDistancia = d;
+                maisProxima = est;
+            }
+        });
+        return maisProxima;
+    }
+
     function renderizarBotoes() {
+        containerBotoes.innerHTML = '';
         estacoes.forEach(est => {
             const btn = document.createElement('button');
             btn.innerHTML = est.nome + (est.externa ? ' ↗' : '');
-            btn.onclick = () => carregarEstacao(est, btn);
+            btn.id = `btn-${est.id}-${est.linha}`;
+            btn.onclick = () => carregarEstacao(est);
             containerBotoes.appendChild(btn);
-            
-            // Define Barueri como inicial
-            if(est.id === 'BRU') btn.classList.add('active');
         });
     }
 
-    function carregarEstacao(est, elemento) {
+    function carregarEstacao(est) {
         const url = `https://proximotrem.viamobilidade.com.br/?linha=${est.linha}&estacao_origem=${est.id}`;
         
         if (est.externa) {
             window.open(url, '_blank');
-        } else {
-            document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-            elemento.classList.add('active');
-            iframe.src = url;
+            return;
         }
+
+        loader.style.display = 'block';
+        document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+        
+        const btnAtivo = document.getElementById(`btn-${est.id}-${est.linha}`);
+        if(btnAtivo) btnAtivo.classList.add('active');
+
+        localStorage.setItem("estacao_preferida", JSON.stringify(est));
+        iframe.src = url;
     }
 
+    // 3. Inicialização Unificada
     window.onload = () => {
         renderizarBotoes();
-        iframe.src = 'https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=BRU';
+
+        const ultimaSalva = JSON.parse(localStorage.getItem("estacao_preferida"));
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    // Se não houver preferência salva, usa a mais próxima
+                    if (!ultimaSalva) {
+                        const proxima = encontrarEstacaoMaisProxima(pos.coords.latitude, pos.coords.longitude);
+                        carregarEstacao(proxima);
+                    } else {
+                        carregarEstacao(ultimaSalva);
+                    }
+                },
+                err => {
+                    console.warn("Localização negada.");
+                    carregarEstacao(ultimaSalva || estacoes[0]);
+                }
+            );
+        } else {
+            carregarEstacao(ultimaSalva || estacoes[0]);
+        }
     };
+
+    iframe.onload = () => { loader.style.display = 'none'; };
 </script>
+
 </body>
 </html>
