@@ -1,87 +1,138 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Próximo Trem</title>
-<style>
-    body {
-        font-family: Arial;
-        margin: 0;
-        background: #0f172a;
-        color: white;
-        text-align: center;
-    }
-    h1 {
-        padding: 15px;
-    }
-    .botoes {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        justify-content: center;
-        padding: 10px;
-    }
-    button {
-        padding: 12px 16px;
-        border: none;
-        border-radius: 10px;
-        background: #2563eb;
-        color: white;
-        font-size: 14px;
-        cursor: pointer;
-    }
-    iframe {
-        width: 100%;
-        height: 75vh;
-        border: none;
-        margin-top: 10px;
-        background: white;
-    }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Próximo Trem</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --primary: #2563eb;
+            --success: #16a34a;
+            --text: #f8fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background: var(--bg-dark);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            padding: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 { margin: 0 0 15px 0; font-size: 1.5rem; }
+
+        .botoes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        button {
+            padding: 10px 14px;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+        }
+
+        button:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        button:active { transform: translateY(0); }
+        button.active { background: var(--success); box-shadow: 0 0 10px rgba(22, 163, 74, 0.4); }
+
+        .container-trem {
+            flex-grow: 1;
+            position: relative;
+            background: white;
+            margin-top: 15px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Indicador de carregamento simples */
+        .loader {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: #333;
+            z-index: -1;
+        }
+    </style>
 </head>
 <body>
-<h1>🚆 Próximo Trem</h1>
-<div class="botoes">
 
-    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=BRU', false, this)">
-        Barueri
-    </button>
-    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=AJO', false, this)">
-        Antônio João
-    </button>
-    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=IPV', false, this)">
-        Itapevi
-    </button>
-    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=OSA', true, this)">
-        Osasco - Linha 8
-    </button>
-    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L9&estacao_origem=OSA', true, this)">
-        Osasco - Linha 9
-    </button>
-    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=JDI', false, this)">
-        Jandira
-    </button>
-    <button onclick="abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=BFU', false, this)">
-        Barra Funda
-    </button>
+<header>
+    <h1>🚆 Próximo Trem</h1>
+    <div class="botoes" id="lista-estacoes">
+        </div>
+</header>
 
-
+<div class="container-trem">
+    <div class="loader">Carregando horários...</div>
+    <iframe id="trem" title="Painel ViaMobilidade"></iframe>
 </div>
-<iframe id="trem"></iframe>
+
 <script>
-function abrirURL(url, novaAba, btn) {
-    document.querySelectorAll('button').forEach(b => b.style.background = '#2563eb');
-    if (novaAba) {
-        window.open(url, '_blank');
-    } else {
-        document.getElementById("trem").src = url;
-        if (btn) btn.style.background = '#16a34a'; // verde = ativo
+    const estacoes = [
+        { nome: 'Barueri', id: 'BRU', linha: 'L8' },
+        { nome: 'Antônio João', id: 'AJO', linha: 'L8' },
+        { nome: 'Itapevi', id: 'IPV', linha: 'L8' },
+        { nome: 'Osasco L8', id: 'OSA', linha: 'L8', externa: true },
+        { nome: 'Osasco L9', id: 'OSA', linha: 'L9', externa: true },
+        { nome: 'Jandira', id: 'JDI', linha: 'L8' },
+        { nome: 'Barra Funda', id: 'BFU', linha: 'L8' }
+    ];
+
+    const iframe = document.getElementById("trem");
+    const containerBotoes = document.getElementById("lista-estacoes");
+
+    function renderizarBotoes() {
+        estacoes.forEach(est => {
+            const btn = document.createElement('button');
+            btn.innerHTML = est.nome + (est.externa ? ' ↗' : '');
+            btn.onclick = () => carregarEstacao(est, btn);
+            containerBotoes.appendChild(btn);
+            
+            // Define Barueri como inicial
+            if(est.id === 'BRU') btn.classList.add('active');
+        });
     }
-}
-window.onload = () => {
-    abrirURL('https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=BRU', false);
-};
+
+    function carregarEstacao(est, elemento) {
+        const url = `https://proximotrem.viamobilidade.com.br/?linha=${est.linha}&estacao_origem=${est.id}`;
+        
+        if (est.externa) {
+            window.open(url, '_blank');
+        } else {
+            document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            elemento.classList.add('active');
+            iframe.src = url;
+        }
+    }
+
+    window.onload = () => {
+        renderizarBotoes();
+        iframe.src = 'https://proximotrem.viamobilidade.com.br/?linha=L8&estacao_origem=BRU';
+    };
 </script>
 </body>
 </html>
